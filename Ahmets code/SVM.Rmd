@@ -1,0 +1,43 @@
+---
+title: "SVM"
+author: "Ahmet"
+date: "April 18, 2018"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+##dt <- read.csv("updatetraindata.csv", header = TRUE)
+##truTest<-read.csv("updatetestdata.csv", header = TRUE)
+
+dt <- read.csv("train_data_cleaned.csv", header = TRUE)
+truTest<-read.csv("test_data_cleaned.csv", header = TRUE)
+saf=dt
+library("glmnetcr")
+library(e1071)
+set.seed(1)
+use<-c(1:nrow(dt))
+training<-sample(use,nrow(dt)*.8)
+testing<-sample(use[-training])
+dt[is.na(dt)] <- 0
+dt$interest_level=ifelse(dt$interest_level=="low",0,1)
+truTest$interest_level=ifelse(truTest$interest_level=="low",0,1)
+truTest[is.na(truTest)] <- 0
+yTr <- truTest$interest_level
+xTr <- truTest[,-c(1,5:8)]
+y <- dt$interest_level
+x <- dt[,-c(1,5:8)]
+
+```
+
+## SVM
+0 is low
+1 is high/medium
+
+
+```{r }
+sVCtu=tune(svm,interest_level~.,data=dt,kernel="linear",ranges=list(cost=c(0.001, 0.01, 0.1, 1,5,10,100)))
+plot(c(0.001, 0.01, 0.1, 1,5,10,100),sVCtu$performances$error,xlab="costs",ylab="Errors",log = "x")
+```
+

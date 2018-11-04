@@ -1,0 +1,120 @@
+```{r}
+install.packages("glmnetcr")
+##dt <- read.csv("updatetraindata.csv", header = TRUE)
+##truTest<-read.csv("updatetestdata.csv", header = TRUE)
+
+dt <- read.csv("train_data_cleaned.csv", header = TRUE)
+truTest<-read.csv("test_data_cleaned.csv", header = TRUE)
+```
+
+```{r}
+saf=dt
+library("glmnetcr")
+set.seed(1)
+use<-c(1:nrow(dt))
+training<-sample(use,nrow(dt)*.8)
+testing<-sample(use[-training])
+```
+
+```{r}
+# dt[is.na(dt)] <- 0
+# dt$interest_level = ordered(dt$interest_level, levels = c("low", "medium", "high"))
+# truTest[is.na(truTest)] <- 0
+# truTest$interest_level = ordered(truTest$interest_level, levels = c("low", "medium", "high"))
+# yTr <- truTest$interest_level
+# xTr <- truTest[,-1]
+# y <- dt$interest_level
+# x <- dt[,-1]
+
+
+
+
+
+```
+
+
+```{r}
+nlog<-glmnetcr(x[training,],y[training])
+tranp<-predict(nlog)
+testp<-predict(nlog,newx=x[testing,])
+btranp<-tranp$probs
+bStranp<-testp$probs
+```
+
+
+```{r}
+i=1
+f=length(nlog$lambda)
+testerr<-rep(NA,f)
+trainerr<-rep(NA,f)
+
+for(i in 1:f){
+## do 5-fold CV to find best lamdba
+useMTra<-rep(NA,f)
+useMTes<-rep(NA,f)
+for(z in 1:length(training)){
+useMTra[z]<-attributes(which.max(btranp[z,,i]))
+}
+for(z in 1:length(testing)){
+useMTes[z]<-attributes(which.max(bStranp[z,,i]))
+}
+trainerr[i]<-sum(useMTra!=y[training])/length(training)
+testerr[i]<-sum(useMTes!=y[testing])/length(testing)
+
+}
+plot(nlog$lambda,trainerr,main="Training error")
+plot(nlog$lambda,testerr,main ="Testing error")
+```
+
+```{r}
+least<-which.min(testerr)
+nlog$lambda[least]
+trueModel<-glmnetcr(x,y,lambda = nlog$lambda[least])
+truTestPre<-predict(nlog,xTr)
+```
+```{r}
+useTruPr<-rep(NA,length(yTr))
+useTru<-yTr
+
+for(z in 1:length(yTr)){
+useTruPr[z]<-attributes(which.max(truTestPre$probs[z,,1]))$names
+}
+truTesterr<-sum(useTruPr!=useTru)/length(useTru)
+print(truTesterr)
+
+table(useTruPr,useTru)
+```
+
+putting high and medium together
+
+
+
+```{r}
+dt[is.na(dt)] <- 0
+dt$interest_level=ifelse(dt$interest_level=="low",1,0)
+truTest$interest_level=ifelse(truTest$interest_level=="low",1,0)
+truTest[is.na(truTest)] <- 0
+yTr <- truTest$interest_level
+xTr <- truTest[,-c(1,5:8)]
+y <- dt$interest_level
+x <- dt[,-c(1,5:8)]
+```
+
+```{r}
+set.seed(1)
+use<-c(1:nrow(dt))
+training<-sample(use,nrow(dt)*.8)
+testing<-sample(use[-training])
+knn.tu=tune.knn(x[training],y[training],k=1:10,tunecontrol=tune.control(sampling = "cross"),cross=10)
+summary(knn.tu)
+plot(1:10,knn.tu$performances$error,xlab="K values",ylab="Errors")
+
+```
+
+  
+  
+
+
+
+
+```

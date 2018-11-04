@@ -1,0 +1,94 @@
+'VBA Code for cleaning the features data
+
+Sub Macro1()
+'
+' Macro1 Macro for making a table for each feature
+'
+'
+
+
+   Dim i As Long, z As Integer, j As Integer, ent As Integer, dict As Scripting.Dictionary, var As Variant
+   
+   i = 2
+   j = 3
+   ent = 4
+   Set dict = New Scripting.Dictionary
+   Worksheets("features").Range("C1:BHV49353").ClearContents
+ 
+   
+    For i = 2 To 49354
+    If Worksheets("features").Cells(i, 2) = "[]" Then
+    
+    End If
+    var = Split(Replace(Replace(Worksheets("features").Cells(i, 2), "[", ""), "]", ""), ",")
+    For Each k In var
+    k = Trim(LCase(k))
+    If k <> vbNullString Then
+    If dict.Exists(k) Then
+    Worksheets("features").Cells(i, dict(k)) = "1"
+    Else
+    dict.Add k, ent
+    Worksheets("features").Cells(1, dict(k)) = k
+    Worksheets("features").Cells(i, dict(k)) = "1"
+    ent = ent + 1
+    End If
+    End If
+    Next k
+    Next i
+    
+  
+  
+    
+End Sub
+
+
+    
+
+
+Sub DeleteDataTable()
+'
+' DeleteDataTable Macro
+'
+
+'
+     Worksheets("features").Range("C1:BZZ49353").ClearContents
+    ActiveWorkbook.Save
+   
+End Sub
+
+Sub Totaling()
+'
+' Totaling Macro
+' Totaling
+'
+
+'
+    Range("C49354").Select
+    ActiveCell.FormulaR1C1 = "=COUNTIF(R[-49352]C:R[-1]C,""1"")"
+    Range("C49354").Select
+    Selection.AutoFill Destination:=Range("C49354:BDA49354"), Type:=xlFillDefault
+    Range("C49354:BDA49354").Select
+End Sub
+
+
+Sub Ordering()
+'
+' Ordering Macro
+'
+
+'
+    Columns("C:BDA").Select
+    ActiveWorkbook.Worksheets("features").Sort.SortFields.Clear
+    ActiveWorkbook.Worksheets("features").Sort.SortFields.Add Key:=Range( _
+        "C49354:BDA49354"), SortOn:=xlSortOnValues, Order:=xlAscending, DataOption _
+        :=xlSortNormal
+    With ActiveWorkbook.Worksheets("features").Sort
+        .SetRange Range("C1:BDA49354")
+        .Header = xlYes
+        .MatchCase = False
+        .Orientation = xlLeftToRight
+        .SortMethod = xlPinYin
+        .Apply
+    End With
+    
+End Sub
